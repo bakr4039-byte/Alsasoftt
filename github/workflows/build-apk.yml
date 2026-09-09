@@ -1,0 +1,59 @@
+name: Build Android APK
+
+# يبني نسخة APK تجريبية لتطبيق حاضر تلقائيًا في كل مرة يُرفع فيها تحديث لمجلد mobile،
+# وينشرها كملف جاهز للتحميل ضمن تبويب Releases بالمستودع. لا يحتاج المستخدم يثبّت
+# أي شيء على جهازه — كل البناء يصير على خوادم GitHub المجانية.
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "mobile/**"
+      - ".github/workflows/build-apk.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+
+      - name: Generate Android project files (android/) if missing
+        working-directory: mobile
+        run: |
+          if [ ! -d android ]; then
+            flutter create --platforms=android --org com.hader --project-name hader_mobile .
+          fi
+
+      - name: Install dependencies
+        working-directory: mobile
+        run: flutter pub get
+
+      - name: Build release APK
+        working-directory: mobile
+        run: flutter build apk --release --dart-define=HADER_API_BASE_URL=https://alsasoftt.onrender.com
+
+      - name: Upload APK as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hader-mobile-apk
+          path: mobile/build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Publish APK as a GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-${{ github.run_number }}
+          name: "نسخة تجريبية للجوال #${{ github.run_number }}"
+          body: |
+            نسخة APK تجريبية مبنية تلقائيًا من الكود الحالي بمجلد mobile.
+            مربوطة بالخادم المنشور: https://alsasoftt.onrender.com
+          files: mobile/build/app/outputs/flutter-apk/app-release.apk
