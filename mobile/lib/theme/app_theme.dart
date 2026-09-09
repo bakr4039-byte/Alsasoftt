@@ -38,8 +38,8 @@ ThemeData buildHaderTheme() {
       elevation: 0,
       centerTitle: true,
     ),
-    cardTheme: CardTheme(
-      color: AppColors.surface,
+cardTheme: CardThemeData(
+  color: AppColors.surface,
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
