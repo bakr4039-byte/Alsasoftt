@@ -34,6 +34,15 @@ jobs:
             flutter create --platforms=android --org com.hader --project-name hader_mobile .
           fi
 
+      - name: Ensure INTERNET permission is present (missing by default in release manifest)
+        working-directory: mobile
+        run: |
+          MANIFEST=android/app/src/main/AndroidManifest.xml
+          if ! grep -q "android.permission.INTERNET" "$MANIFEST"; then
+            sed -i '/<manifest /a\    <uses-permission android:name="android.permission.INTERNET"/>' "$MANIFEST"
+          fi
+          cat "$MANIFEST"
+
       - name: Install dependencies
         working-directory: mobile
         run: flutter pub get
